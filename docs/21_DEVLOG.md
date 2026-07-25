@@ -14,6 +14,41 @@ The Devlog is a chronological record of major project milestones, architectural 
 
 ## Chronological Entries
 
+### 2026-07-26 — Correction: KV cache correctness past `block_size` + fused-AdamW dead check
+- **Finding:** the "+65–81%" KV-cache speedup banked on 2026-07-25 was measured on a run
+  (`--gen_tokens 200`, `block_size=128`) where 72 of 200 steps executed a code path that
+  silently diverged from the naive (correct) output. Root cause: this model uses learned
+  **absolute** positional embeddings; a cached K/V is frozen at the position it had when
+  first embedded, so trimming the cache to slide the window desyncs every retained entry's
+  position from what the continuing generation assumes. `torch.equal` at `temp=0` never
+  caught it — greedy argmax barely moves for a ~1e-2 logit shift, and the existing
+  equivalence test's `max_new_tokens` happened not to expose a visible difference.
+- **How it surfaced:** found on an independent branch (not part of a dispatched task),
+  reproduced and verified here at the **logit level** before trusting it — bit-identical
+  through `block_size`, diverging from that step onward on unmodified `main`. The fix
+  (stop reusing the cache once context ≥ `block_size`, fall back to the naive path — see
+  [`ADR-0004`](../research/design_decisions/ADR-0004-no-cache-reuse-past-block-size.md))
+  was verified independently to reduce the divergence to `6e-8` (float noise).
+- **Blast radius, checked:** [`outputs/trained_shakespeare_sample.txt`](../outputs/trained_shakespeare_sample.txt)
+  is **unaffected** — `scripts/generate.py` never sets `use_cache`. Only
+  [`benchmarks/002_kv_cache.md`](../benchmarks/002_kv_cache.md)'s headline number was
+  measured against the bug; it now carries a correction (§7): cache is still **+86%** over
+  naive on the fixed code, at a **~3%** cost of correctness relative to the buggy version.
+- **Also landed:** a second, independent fix — `hasattr(torch.optim.AdamW, 'fused')`
+  checked for a class attribute, but `fused` is a constructor keyword, so the check was
+  `False` on every torch build and the fused-AdamW path had never actually run. Fixed via
+  `inspect.signature(...)`. Benchmarked honestly: **no measurable win** at v0.1's 818K-param
+  scale (`benchmarks/005_fused_adamw.md`) — correctly reasoned as expected (optimizer step
+  is negligible next to fwd/bwd this small), landed anyway since a dead check is worth
+  fixing regardless, and it engages automatically once the model grows.
+- **Lesson:** an equivalence test with too weak a comparison (final sampled tokens under
+  greedy argmax) can pass while the underlying computation is wrong. Prefer comparing raw
+  logits/hidden states directly when verifying "path A == path B" claims, not just the
+  argmax of their outputs — this is now `OPTIMIZATION_BACKLOG.md` item #16's cross-reference
+  and worth remembering for any future equivalence gate.
+
+---
+
 ### 2026-07-25 — Phases 0–3 Code + First Coherent Text (v0.1 milestone) 🎉
 - **Milestone:** JimmyLabs trains end-to-end and generates recognizable Shakespeare.
   Validation loss fell **4.174 → 1.54** over 5000 steps on the M1 (MPS).

@@ -135,7 +135,7 @@ Extras once trained:
 
 ```bash
 python scripts/benchmark.py                 # naive generation throughput
-python scripts/benchmark.py --use_cache     # KV-cache generation (~+65–80% faster, same machine)
+python scripts/benchmark.py --use_cache     # KV-cache generation, within block_size (~+65–86% faster; see the correction note below)
 python scripts/visualize_attention.py       # ASCII heatmap of what each attention head learned
 ```
 
@@ -203,13 +203,20 @@ We welcome contributions, provided they align strictly with the project's educat
    phase 1  nlp foundations ..  ▓▓▓▓▓▓▓▓▓▓  done — char tokenizer · data loader
    phase 2  tinygpt .........   ▓▓▓▓▓▓▓▓▓▓  done — 0.82M GPT, param-exact
    phase 3  training ........   ▓▓▓▓▓▓▓▓▓▓  done — trains! val loss 4.17 → 1.54
-   phase 4  optimization ....   ░░░░░░░░░░  next — KV cache · bf16 · benchmarks
-   phase 5  research ........   ▓▓▓▓▓░░░░░  ongoing — 6 paper notes
+   phase 4  optimization ....   ▓▓▓▓▓▓▓▓▓▓  done — KV cache (see caveat below) · fused AdamW · bf16 rejected
+   phase 5  research ........   ▓▓▓▓▓▓░░░░  ongoing — 6 paper notes · TinyStories scaling underway
 ```
 
 **v0.1 speaks.** The trained model generates recognizable Shakespeare (character names, the
 `NAME:` play format) — see [`outputs/trained_shakespeare_sample.txt`](outputs/trained_shakespeare_sample.txt),
-next to the pre-training garbage in `untrained_baseline.txt`. 39 tests green, CI-gated.
+next to the pre-training garbage in `untrained_baseline.txt`. 54 tests green, CI-gated.
+
+> **Correction (2026-07-26):** KV-cache generation is correct and fast **within
+> `block_size`**; past it, the naive (uncached) path is used instead of a buggy trim —
+> see [`docs/21_DEVLOG.md`](docs/21_DEVLOG.md) and
+> [`ADR-0004`](research/design_decisions/ADR-0004-no-cache-reuse-past-block-size.md). Cache
+> is still **+86%** over naive on the corrected benchmark
+> ([`002_kv_cache.md`](benchmarks/002_kv_cache.md) §7).
 
 An active, in-progress **3–4 month educational build**. The documentation is written *ahead of* the code on purpose: **you cannot engineer clearly what you cannot explain clearly.**
 
