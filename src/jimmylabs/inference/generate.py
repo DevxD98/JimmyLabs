@@ -11,20 +11,30 @@ def generate(model: GPT, idx: torch.Tensor, max_new_tokens: int, temperature: fl
     past_key_values = None
     
     for _ in range(max_new_tokens):
-        if use_cache and past_key_values is not None:
-            # Trim cache if we are at max block_size
-            seq_len = past_key_values[0][0].size(-2)
-            if seq_len >= block_size:
-                # Keep the last block_size - 1 tokens to leave room for the 1 new token
-                trim_len = seq_len - (block_size - 1)
-                past_key_values = [(k[:, :, trim_len:], v[:, :, trim_len:]) for k, v in past_key_values]
-            
+        # The cache is only reusable while the context is still *growing*.
+        #
+        # This model uses learned absolute positions (embedding.py), and a cached
+        # K/V is frozen at the position its token had when first embedded. Once the
+        # context outgrows block_size the window has to slide, and the naive path
+        # re-embeds that window from position 0 — so every cached entry is now one
+        # position stale, and one more per slide. Trimming the cache hides this:
+        # the offset still *looks* right because it is derived from the cache
+        # length, while the retained keys silently disagree about where they are.
+        #
+        # There is nothing to salvage by re-slicing; with absolute positions a slid
+        # window must be re-embedded. So stop caching at the boundary and fall back
+        # to the naive sliding-window forward, which is correct by construction.
+        # (Relative/rotary positions would lift this restriction — see ADR-0004.)
+        cache_usable = use_cache and idx.size(1) < block_size
+
+        if cache_usable and past_key_values is not None:
             idx_cond = idx[:, -1:]
         else:
+            past_key_values = None
             idx_cond = idx if idx.size(1) <= block_size else idx[:, -block_size:]
-        
+
         # Forward pass to get logits for the sequence
-        if use_cache:
+        if cache_usable:
             logits, _, past_key_values = model(idx_cond, use_cache=True, past_key_values=past_key_values)
         else:
             logits, _ = model(idx_cond)

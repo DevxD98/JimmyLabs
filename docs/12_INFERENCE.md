@@ -120,6 +120,19 @@ Instead of recomputing past keys and values, we store (cache) them in memory acr
 
 By caching past keys and values, per-step computation drops from $O(T^2)$ to $O(T)$, providing dramatic speedups during long-context generation. Detailed KV cache implementation specifications live in [`architecture/future_architecture.md`](../architecture/future_architecture.md).
 
+> **Caveat — the cache stops at `block_size`.** The sketch above assumes a cached
+> $K_i$ stays valid forever. That holds only while the context is still *growing*. This
+> model uses learned **absolute** positions ([`07_EMBEDDINGS.md`](07_EMBEDDINGS.md)), so
+> each cached entry is frozen at the position its token had when embedded. Once the
+> context outgrows `block_size` the window must slide, and a slid window has to be
+> re-embedded from position 0 — which invalidates every cached key at once. JimmyLabs
+> therefore disengages the cache at the boundary and falls back to the naive
+> sliding-window forward, trading that speedup for correctness. Reusing a *trimmed*
+> cache instead is the bug documented in
+> [`ADR-0004`](../research/design_decisions/ADR-0004-no-cache-reuse-past-block-size.md):
+> it looks right and silently shifts every logit. Relative/rotary positions are what
+> actually lift the restriction (backlog #16).
+
 ---
 
 ## Visual Diagrams

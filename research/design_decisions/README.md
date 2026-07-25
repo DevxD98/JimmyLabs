@@ -29,6 +29,7 @@ with a new ADR that links back. The trail of superseded decisions *is* the learn
 | `ADR-0001-character-tokenizer-first.md` | Start with a character tokenizer | accepted (example) |
 | `ADR-0002-pre-norm.md` | Use Pre-Layer Normalization by Default | accepted |
 | `ADR-0003-weight-tying-default.md` | Enable Weight Tying as v0.1 Default Baseline | accepted |
+| `ADR-0004-no-cache-reuse-past-block-size.md` | Do Not Reuse the KV Cache Once the Context Outgrows `block_size` | accepted |
 | `ADR-TEMPLATE.md` | Copy me for new decisions | — |
 
 See [`research/design_decisions/`](.) and the concept behind each choice in `docs/`.
