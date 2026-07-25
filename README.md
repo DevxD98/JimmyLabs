@@ -107,7 +107,9 @@ tensors · autograd · optimizers · MPS (Metal) acceleration
 </td></tr>
 </table>
 
-## 🚀 Quick start (for readers, not runners — yet)
+## 🚀 Quick start
+
+**Reading first?**
 
 ```
    👋 new to ML?     →  docs/03_LEARNING_PATH.md   (assumes basic Python, almost nothing else)
@@ -115,6 +117,29 @@ tensors · autograd · optimizers · MPS (Metal) acceleration
    🏗️ want the wiring? →  architecture/               (tensor shapes & data flow)
    🔬 here to tinker?  →  research/                    (papers · experiments · decisions)
 ```
+
+**Running it?** It works — v0.1 trains and generates on a MacBook Air M1. From a clean clone:
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e . && pip install pytest
+
+pytest -q                                          # 43 tests, ~5–10s — proves it all works
+
+python scripts/prepare_data.py                     # downloads + tokenizes tiny Shakespeare
+python scripts/train.py --config configs/train_shakespeare.yaml   # ~3 min, val loss 4.17 → ~1.5
+python scripts/generate.py --temperature 0.8 --top_k 40            # generate from the checkpoint
+```
+
+Extras once trained:
+
+```bash
+python scripts/benchmark.py                 # naive generation throughput
+python scripts/benchmark.py --use_cache     # KV-cache generation (~+65–80% faster, same machine)
+python scripts/visualize_attention.py       # ASCII heatmap of what each attention head learned
+```
+
+No GPU/CUDA required — MPS (Apple Silicon) is used automatically if available, CPU otherwise.
 
 ## 🗂️ Repository map
 
