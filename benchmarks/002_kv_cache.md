@@ -76,7 +76,7 @@ the A/B with the fix in place, so the speedup quoted is one the correctness gate
 backs.
 
 **Machine state** (differs from §2 — report your own rather than comparing across machines):
-- Apple Silicon · Darwin 27.0.0 (arm64) · Python 3.12.12 · **torch 2.10.0**
+- Apple Silicon · Darwin 27.0.0 (arm64) · Python 3.12.12 · **torch 2.13.0**
 - Device: **mps** · dtype: **fp32**
 - Protocol: `--iters 15 --warmup 5 --gen_tokens 200`, 6 runs per arm, **median**, first
   (cold) run discarded — a cold start reads ~45 tok/s and is not representative.
