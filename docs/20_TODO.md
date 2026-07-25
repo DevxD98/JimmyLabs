@@ -50,7 +50,7 @@ This document tracks active development tasks, milestone goals, and architecture
 - [x] **Phase 1** — character tokenizer + data loader (`src/jimmylabs/tokenizer/`, `data/`).
 - [x] **Phase 2** — GPT model (`src/jimmylabs/model/{config,embedding,attention,feedforward,block,gpt}.py`); param count == 818,048 (SPEC §5).
 - [x] **Phase 3** — training loop, LR schedule, checkpointing, generation (`src/jimmylabs/training/`, `inference/`; `scripts/{prepare_data,train,generate}.py`).
-- [x] Test suite: **39 tests** (shape · known-answer · gradient · overfit-a-batch · regression); CI in `.github/workflows/tests.yml`.
+- [x] Test suite: **43 tests** (shape · known-answer · gradient · overfit-a-batch · regression); CI in `.github/workflows/tests.yml`.
 - [x] **v0.1 milestone** — first coherent Shakespeare, val loss 1.54 (`outputs/trained_shakespeare_sample.txt`).
 
 ---
