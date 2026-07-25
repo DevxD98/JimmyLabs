@@ -42,16 +42,16 @@
 - Notes: memorizes quickly — good for the overfit test, not a generalization claim.
 
 ### TinyStories — *planned: primary corpus*
-- Source URL: _(fill: the TinyStories dataset release)_
-- Version / snapshot date: _tbd_
-- Downloaded on: _tbd_
-- License: **verify upstream terms before training** (do not assume)
-- Size (raw): ~hundreds of MB
+- Source URL: https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStories-train.txt
+- Version / snapshot date: 2026-07-25
+- Downloaded on: 2026-07-25
+- License: **CDLA-Sharing-1.0** (Community Data License Agreement, verified via HF dataset card)
+- Size (raw): ~1.92 GB
 - Intended use: **primary** — best capacity match for a 1–4M-param model.
-- Cleaning applied: _tbd_
-- Vocab produced: _tbd_
-- Train/val split: 90/10, seed _tbd_
-- Prepared artifact: `datasets/tinystories/ids.idx` (git-ignored)
+- Cleaning applied: None (original casing and whitespace preserved, streamed directly)
+- Vocab produced: 138 unique characters
+- Train/val split: 90/10, seeded with 42
+- Prepared artifact: `datasets/tinystories/train.pt` and `datasets/tinystories/val.pt`
 - Notes: the reason we expect coherent output at all (see the TinyStories paper).
 
 ### WikiText-2 — *optional: stretch complexity*

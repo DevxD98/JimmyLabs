@@ -57,3 +57,4 @@ def test_train_script_fails_loudly_without_data(tmp_path):
     )
     assert result.returncode != 0, "train.py should fail loudly when the dataset is missing"
     assert "not found" in (result.stdout + result.stderr).lower()
+

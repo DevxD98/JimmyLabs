@@ -1,0 +1,23 @@
+# TinyStories Training Config
+# Uses v0.2 architecture (~2.7M params)
+
+vocab_size: 138
+n_layer: 6
+n_head: 6
+n_embd: 192
+block_size: 256
+dropout: 0.1
+weight_tying: true
+
+# Training
+batch_size: 64        # Or smaller if OOM, with grad accum
+grad_accum_steps: 1
+lr: 5.0e-4
+warmup_steps: 100
+max_steps: 3375       # 2.7M params * 20 tokens / (64*256 tokens/step)
+weight_decay: 0.1
+grad_clip: 1.0
+
+# Eval
+eval_interval: 200
+seed: 42

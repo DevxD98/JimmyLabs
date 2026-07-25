@@ -130,7 +130,12 @@ def main():
     if device == 'mps':
         peak_mb = torch.mps.driver_allocated_memory() / 1e6
     ckpt = 'checkpoints/best_model.pt'
-    ckpt_mb = os.path.getsize(ckpt) / 1e6 if os.path.exists(ckpt) else None
+    ckpt_mb = None
+    val_loss = None
+    if os.path.exists(ckpt):
+        ckpt_mb = os.path.getsize(ckpt) / 1e6
+        checkpoint = torch.load(ckpt, map_location='cpu', weights_only=True)
+        val_loss = checkpoint.get('val_loss', None)
 
     print("RESULTS (median, warm)")
     print(f"  train throughput : {train_tok_s:,.0f} tokens/sec   ({med_step*1000:.2f} ms/step)")
@@ -139,6 +144,9 @@ def main():
     print(f"  model params     : {n_params:,}")
     if peak_mb is not None:  print(f"  MPS driver mem   : {peak_mb:,.1f} MB")
     if ckpt_mb is not None:  print(f"  checkpoint size  : {ckpt_mb:,.1f} MB")
+    if val_loss is not None:
+        import math
+        print(f"  val loss         : {val_loss:.4f}  (perplexity: {math.exp(val_loss):.2f})")
     print("=" * 60)
 
 

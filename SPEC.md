@@ -44,7 +44,7 @@ rationale in [`docs/00_PROJECT_VISION.md`](docs/00_PROJECT_VISION.md).
 | Version | tokenizer | vocab | n_layer | n_head | n_embd | block | ≈ params |
 |---------|-----------|-------|---------|--------|--------|-------|----------|
 | **v0.1** | char | ~65 | 4 | 4 | 128 | 128 | **~0.82M** |
-| v0.2 | char | ~65 | 6 | 6 | 192 | 256 | ~2.7M |
+| v0.2 | char | ~138 | 6 | 6 | 192 | 256 | ~2.7M |
 | v0.3 | char | ~100 | 6 | 6 | 256 | 256 | ~4.8M → trim to ≤4M |
 | v1.0 | char (BPE candidate) | ~65–512 | 6 | 8 | 256 | 256 | ~4M, tuned |
 
@@ -102,6 +102,25 @@ Shape tests assert these first — see [`tests/TESTING_STRATEGY.md`](tests/TESTI
 Rule of thumb: **≈ 12·C² per block** dominates; the FFN holds ~2/3 of a block's params.
 Untying the head would add `V·C` (here +8,320). See
 [`docs/16_MODEL_CONFIGURATION.md`](docs/16_MODEL_CONFIGURATION.md).
+
+### Parameter count (worked, for v0.2)
+
+`V≈138, L=6, h=6, C=192, T=256`, weights tied.
+
+```
+   token embedding      V·C  = 138·192       =   26,496
+   positional embedding T·C  = 256·192       =   49,152
+   per block:
+     attention  Wq,Wk,Wv,Wo  4·C²  = 4·36,864 = 147,456   (+biases ≈ 768)
+     LayerNorm ×2             2·(2C)          =      768
+     FFN  W1 (C·4C)+ W2(4C·C) 8·C²  = 294,912  (+biases ≈ 960)
+     ── block total ≈ 12·C² + extras          ≈ 444,864
+   blocks: 6 · 444,864                        = 2,669,184
+   final LayerNorm          2C                =      384
+   lm head                  tied → 0 extra    =        0
+   ────────────────────────────────────────────────────────
+   TOTAL v0.2                                 ≈ 2,745,216 (~2.7M)
+```
 
 ---
 

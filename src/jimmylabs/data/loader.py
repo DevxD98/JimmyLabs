@@ -23,7 +23,7 @@ def get_batch(data: torch.Tensor, block_size: int, batch_size: int, device: str 
     x = torch.stack([data[i:i+block_size] for i in ix])
     y = torch.stack([data[i+1:i+block_size+1] for i in ix])
     
-    # Move to the desired device
-    x, y = x.to(device), y.to(device)
+    # Move to the desired device and ensure dtype is long (int64)
+    x, y = x.to(device, dtype=torch.long), y.to(device, dtype=torch.long)
     
     return x, y

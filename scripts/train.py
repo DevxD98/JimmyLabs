@@ -88,6 +88,7 @@ def main():
     optimizer.zero_grad(set_to_none=True)
     
     t0 = time.time()
+    time_start = time.time()
     
     # Setup mixed precision context
     dtype_str = config_dict.get('dtype', 'fp32')
@@ -144,6 +145,9 @@ def main():
                     print(f"Saved new best model with val loss {val_loss:.4f} to {checkpoint_path}")
                     
             model.train()
+            
+    total_time = time.time() - time_start
+    print(f"Training completed in {total_time/60:.2f} minutes.")
 
 if __name__ == '__main__':
     main()

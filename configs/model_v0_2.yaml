@@ -1,0 +1,11 @@
+# JimmyLabs v0.2 Model Config
+# Target: ~2.7M parameters
+# Corpus: TinyStories
+
+vocab_size: 138       # Actual TinyStories chars
+n_layer: 6
+n_head: 6
+n_embd: 192           # Must be cleanly divisible by n_head
+block_size: 256
+dropout: 0.1
+weight_tying: true
