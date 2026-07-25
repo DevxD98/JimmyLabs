@@ -52,3 +52,29 @@ def test_train_step_decreases_loss():
     _, final_loss = model(idx, targets)
     
     assert final_loss.item() < initial_loss.item(), f"Loss did not decrease: {initial_loss.item()} -> {final_loss.item()}"
+
+
+def test_fused_adamw_detection_matches_torch_support():
+    """
+    FUSED-DETECTION:
+    configure_optimizers must actually enable fused AdamW where torch supports it.
+
+    Regression guard: the check used to be
+        hasattr(torch.optim.AdamW, 'fused')
+    but `fused` is a constructor keyword, not a class attribute, so that is False
+    on every torch build -- the fused path was silently dead everywhere. Assert
+    against torch's real signature instead of hardcoding an expected value, so
+    this stays correct on builds that drop or add fused support.
+    """
+    import inspect
+
+    seed_everything(42)
+    model = GPT(GPTConfig(vocab_size=65, n_layer=2, n_head=2, n_embd=32, block_size=16))
+    supported = 'fused' in inspect.signature(torch.optim.AdamW).parameters
+
+    accel = model.configure_optimizers(weight_decay=0.1, learning_rate=1e-3, device_type='cuda')
+    assert bool(accel.param_groups[0].get('fused', False)) is supported
+
+    # CPU must never take the fused path, regardless of torch support.
+    cpu = model.configure_optimizers(weight_decay=0.1, learning_rate=1e-3, device_type='cpu')
+    assert not cpu.param_groups[0].get('fused', False)
