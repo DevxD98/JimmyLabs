@@ -1,3 +1,4 @@
+import inspect
 import torch
 import torch.nn as nn
 from jimmylabs.model.config import GPTConfig
@@ -137,8 +138,12 @@ class GPT(nn.Module):
             {"params": [param_dict[pn] for pn in sorted(list(no_decay))], "weight_decay": 0.0},
         ]
         
-        # Use fused AdamW on MPS/CUDA if available for speed
-        use_fused = device_type in ('cuda', 'mps') and hasattr(torch.optim.AdamW, 'fused')
+        # Use fused AdamW on MPS/CUDA if available for speed.
+        # `fused` is a constructor keyword, not an attribute of the class, so
+        # hasattr(torch.optim.AdamW, 'fused') is False on every torch build --
+        # the previous check disabled this path everywhere, silently.
+        fused_available = 'fused' in inspect.signature(torch.optim.AdamW).parameters
+        use_fused = device_type in ('cuda', 'mps') and fused_available
         extra_args = dict(fused=True) if use_fused else dict()
         optimizer = torch.optim.AdamW(optim_groups, lr=learning_rate, **extra_args)
         
