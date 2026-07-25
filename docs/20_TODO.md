@@ -55,14 +55,29 @@ This document tracks active development tasks, milestone goals, and architecture
 
 ---
 
-## Phase 4 — Optimization (next)
+## Phase 4 — Optimization (DONE ✓)
 
-- [ ] Record the **baseline benchmark** (train/gen tokens/sec, peak mem, ckpt size) — [`docs/14`](14_BENCHMARKING.md).
-- [ ] **KV cache** (`OPTIMIZATION_BACKLOG` #2) + correctness test: cached output == naive output.
-- [ ] **Gradient accumulation** (#3) — larger effective batch within 8 GB.
-- [ ] **bf16** mixed-precision experiment (#6) — benchmark before adopting.
-- [ ] **Attention visualizer** — reuse the `_attn_weights` already stashed on each forward.
-- [ ] **v0.2** config bump (~2.7M) once optimizations land.
+- [x] **Baseline benchmark** — `benchmarks/001_baseline.md` (train 65K tok/s, gen 103 tok/s, 258 MB, 10.1 MB ckpt).
+- [x] **KV cache** (`OPTIMIZATION_BACKLOG` #2) — `benchmarks/002_kv_cache.md`, gen +65–81% (measured twice, independently). Correctness gated (`test_kv_cache`: cached == naive, bit-identical).
+- [x] **Gradient accumulation** (#3) — `benchmarks/003_grad_accum.md`, eff. batch 64 at +67 MB. Gated (`test_grad_accum`: matches a 4× batch).
+- [x] **bf16** mixed-precision experiment (#6) — `research/experiments/001_bf16_mixed_precision.md`. **Rejected**: 15–31% slower on M1 (no native bf16 matmul hardware). Correct, honest negative result.
+- [x] **Attention visualizer** — `scripts/visualize_attention.py`, reuses the stashed `_attn_weights`.
+
+## Phase 5 — Scale & the Primary Corpus (next)
+
+v0.1 proved the pipeline on Shakespeare (the *sanity* corpus). Per
+[`docs/17_DATASET_GUIDE.md`](17_DATASET_GUIDE.md), TinyStories — not Shakespeare — is the
+**primary** corpus: its simple English is the actual capacity match for a 1–4M-param model,
+and is where genuinely coherent generation is most likely.
+
+- [ ] **TinyStories provenance + prep** — fill `datasets/SOURCES.md` (real URL/license/date), a
+      `prepare_tinystories.py` mirroring `prepare_data.py`.
+- [ ] **v0.2 config** (~2.7M: L6 h6 C192 block256, `configs/model_v0_2.yaml`) — train on
+      TinyStories, generate, compare qualitatively to v0.1's Shakespeare sample.
+- [ ] Remaining cheap backlog items: **#4** kill hot-loop `.item()`/print syncs, **#5** keep
+      data on-device, **#7** memory-map the dataset instead of full `torch.load`, **#8**
+      efficient top-k/top-p sampling (avoid full sort).
+- [ ] Benchmark v0.2 vs v0.1 (`benchmarks/004_v0_2.md`) — params, tok/s, memory headroom on 8 GB.
 
 ---
 
