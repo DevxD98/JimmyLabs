@@ -26,7 +26,7 @@
 | 4 | **Kill hot-loop syncs** (no per-step `.item()`/print) | ★★★☆☆ | ★☆☆☆☆ | **High** | planned | [13](../docs/13_OPTIMIZATION_FOR_APPLE_SILICON.md) |
 | 5 | **Keep data on-device / avoid CPU↔MPS ping-pong** | ★★★☆☆ | ★☆☆☆☆ | **High** | planned | [13](../docs/13_OPTIMIZATION_FOR_APPLE_SILICON.md) |
 | 6 | **bf16/fp16 mixed precision** (halve activation mem) | ★★★★☆ | ★★★☆☆ | **Medium** (version-dependent) | experiment-open | [13](../docs/13_OPTIMIZATION_FOR_APPLE_SILICON.md) |
-| 7 | **Memory-map dataset** (keep corpus out of the 8 GB) | ★★★☆☆ | ★★☆☆☆ | **Medium** | planned | [17](../docs/17_DATASET_GUIDE.md) |
+| 7 | **Memory-map dataset** (keep corpus out of the 8 GB) | ★★★☆☆ | ★★☆☆☆ | **Medium** | **applied** — unreclaimable RAM 3,522→283 MB (**12.5x**) on the 414.7M-token corpus; disk 4x smaller; batches proven bit-identical → [005](../benchmarks/005_mmap_dataset.md) | [17](../docs/17_DATASET_GUIDE.md) |
 | 8 | **Efficient sampling** (top-k/top-p without full sort) | ★★☆☆☆ | ★★☆☆☆ | **Medium** | planned | [12](../docs/12_INFERENCE.md) |
 | 9 | **Tuned batch/block for the 8 GB ceiling** | ★★★☆☆ | ★★☆☆☆ | **Medium** | experiment-open | [SPEC §6](../SPEC.md) |
 | 10 | **Fused/`SDPA` attention** (if MPS path is faster) | ★★★☆☆ | ★★★☆☆ | **Medium** | experiment-open | [08](../docs/08_ATTENTION.md) |
