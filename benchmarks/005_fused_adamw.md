@@ -1,8 +1,8 @@
-# Benchmark 004 — Fused AdamW (detection fix)
+# Benchmark 005 — Fused AdamW (detection fix)
 
 | Field | Value |
 |-------|-------|
-| ID | 004 |
+| ID | 005 |
 | Date | 2026-07-25 |
 | Type | optimization (result: **no measurable win at v0.1 scale**) |
 | Baseline | `benchmarks/001_baseline.md` |
