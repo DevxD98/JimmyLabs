@@ -48,9 +48,15 @@ def corpus_and_config(tmp_path):
 
 
 def run_train(cfg_path, data_dir, *extra, timeout=600):
+    # --out_dir is derived from the caller's tmp dir and must never be omitted. train.py
+    # used to hardcode 'checkpoints/' relative to the CWD, and these tests run from the
+    # repo root -- so every suite run overwrote the real banked checkpoint with a 2-step
+    # toy model. That is how the trained v0.2 weights were lost.
+    out_dir = Path(data_dir).parent / "checkpoints"
     return subprocess.run(
         [sys.executable, str(REPO_ROOT / "scripts" / "train.py"),
-         "--config", str(cfg_path), "--data_dir", str(data_dir), *extra],
+         "--config", str(cfg_path), "--data_dir", str(data_dir),
+         "--out_dir", str(out_dir), *extra],
         capture_output=True, text=True, cwd=REPO_ROOT, timeout=timeout,
     )
 

@@ -44,6 +44,11 @@ def main():
                         help='Read the corpus via a memory-mapped binary instead of loading '
                              'it fully into RAM (OPTIMIZATION_BACKLOG #7, benchmarks/006). '
                              'Default off; identical batches either way.')
+    parser.add_argument('--out_dir', type=str, default='checkpoints',
+                        help='Directory to write best_model.pt into. Tests MUST point this at '
+                             'a temp dir: the path was previously hardcoded relative to the '
+                             'CWD, so every smoke test that ran train.py from the repo root '
+                             'silently overwrote the real banked checkpoint with a 2-step toy.')
     args = parser.parse_args()
 
     # Load configuration
@@ -118,7 +123,7 @@ def main():
         get_batch_fn = get_batch
 
     # Setup checkpoints dir
-    os.makedirs('checkpoints', exist_ok=True)
+    os.makedirs(args.out_dir, exist_ok=True)
     best_val_loss = float('inf')
     
     # Pre-zero gradients
@@ -177,7 +182,7 @@ def main():
                 
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
-                    checkpoint_path = os.path.join('checkpoints', 'best_model.pt')
+                    checkpoint_path = os.path.join(args.out_dir, 'best_model.pt')
                     save_checkpoint(checkpoint_path, model, optimizer, config_dict, step, val_loss)
                     print(f"Saved new best model with val loss {val_loss:.4f} to {checkpoint_path}")
                     
