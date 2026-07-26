@@ -10,11 +10,17 @@ dropout: 0.1
 weight_tying: true
 
 # Training
-batch_size: 64        # Or smaller if OOM, with grad accum
-grad_accum_steps: 1
+# batch_size lowered 64->16 (with grad_accum_steps 1->4) after a real batch=64 run
+# visibly lagged an 8GB M1 Air: attention activation memory scales with
+# batch_size * block_size^2, and block_size=256 (2x v0.1's 128) makes batch_size the
+# lever to pull. grad_accum_steps=4 keeps the EFFECTIVE batch at 64 (16*4), so the
+# per-optimizer-step token count and the Chinchilla-derived max_steps below are
+# unchanged: 3375 * (16*4) * 256 = 55,296,000 tokens, same as before.
+batch_size: 16
+grad_accum_steps: 4
 lr: 5.0e-4
 warmup_steps: 100
-max_steps: 3375       # 2.7M params * 20 tokens / (64*256 tokens/step)
+max_steps: 3375       # 2.7M params * 20 tokens / (16*4*256 tokens/step) = 55.3M tokens
 weight_decay: 0.1
 grad_clip: 1.0
 

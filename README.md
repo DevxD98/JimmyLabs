@@ -204,12 +204,16 @@ We welcome contributions, provided they align strictly with the project's educat
    phase 2  tinygpt .........   ▓▓▓▓▓▓▓▓▓▓  done — 0.82M GPT, param-exact
    phase 3  training ........   ▓▓▓▓▓▓▓▓▓▓  done — trains! val loss 4.17 → 1.54
    phase 4  optimization ....   ▓▓▓▓▓▓▓▓▓▓  done — KV cache (see caveat below) · fused AdamW · bf16 rejected
-   phase 5  research ........   ▓▓▓▓▓▓░░░░  ongoing — 6 paper notes · TinyStories scaling underway
+   phase 5  research ........   ▓▓▓▓▓▓▓░░░  ongoing — 6 paper notes · v0.2 trained on TinyStories
 ```
 
-**v0.1 speaks.** The trained model generates recognizable Shakespeare (character names, the
-`NAME:` play format) — see [`outputs/trained_shakespeare_sample.txt`](outputs/trained_shakespeare_sample.txt),
-next to the pre-training garbage in `untrained_baseline.txt`. 54 tests green, CI-gated.
+**v0.1 speaks — and v0.2 speaks more fluently.** v0.1 (0.82M params) generates recognizable
+Shakespeare — see [`outputs/trained_shakespeare_sample.txt`](outputs/trained_shakespeare_sample.txt)
+next to the pre-training garbage in `untrained_baseline.txt`. v0.2 (2.75M params, trained on
+TinyStories) goes further — real names, coherent short sentences, correct dialogue
+punctuation — see [`outputs/trained_tinystories_v0_2_sample.txt`](outputs/trained_tinystories_v0_2_sample.txt)
+([`benchmarks/004_v0_2.md`](benchmarks/004_v0_2.md): val loss **0.86**, perplexity ≈2.4).
+66 tests green, CI-gated.
 
 > **Correction (2026-07-26):** KV-cache generation is correct and fast **within
 > `block_size`**; past it, the naive (uncached) path is used instead of a buggy trim —

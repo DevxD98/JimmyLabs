@@ -14,6 +14,44 @@ The Devlog is a chronological record of major project milestones, architectural 
 
 ## Chronological Entries
 
+### 2026-07-26 — v0.2 milestone: first TinyStories training run 🎉
+- **Milestone:** the first ~2.7M-param model (L=6, h=6, C=192, block=256, vocab=138)
+  trained to completion on TinyStories, the project's *primary* corpus. Validation loss
+  fell from `ln(138)≈4.93` to **0.8607** (perplexity ≈2.37) at the best checkpoint
+  (step 2800/3375). See [`benchmarks/004_v0_2.md`](../benchmarks/004_v0_2.md) for the full
+  record and [`outputs/trained_tinystories_v0_2_sample.txt`](../outputs/trained_tinystories_v0_2_sample.txt)
+  for the sample — noticeably more fluent than v0.1's Shakespeare sample (real names,
+  coherent short sentences, correct dialogue punctuation), matching
+  [`docs/17`](17_DATASET_GUIDE.md)'s thesis that TinyStories is the better capacity match
+  for a model this size.
+- **Laptop-safety correction, applied before running:** the config originally called for
+  `batch_size=64`, which visibly strained the machine on a prior attempt (attention
+  activation memory scales with `batch_size × block_size²`, and `block_size=256` is 2× v0.1's).
+  Lowered to `batch_size=16` with `grad_accum_steps=4` (same effective batch, same
+  ~55.3M-token Chinchilla budget) before this run. Even so, the actual run took ~16 hours
+  wall-clock — the machine was under real memory pressure from causes independent of this
+  process (confirmed: the training process itself used ~60 MB RSS the whole time, while
+  system-wide swap reached ~94% used). The wall-clock time is not representative of a
+  clean-machine run and is reported as such.
+- **A second real bug found and fixed while banking this milestone:** `scripts/generate.py`
+  had never been run against a non-v0.1-shaped checkpoint. It built a throwaway model
+  hardcoded to v0.1's exact shape just to read the checkpoint's stored config — but
+  `load_checkpoint()` always applies the state dict strictly, so this only ever worked by
+  coincidence when the checkpoint happened to already be v0.1-shaped. The first real v0.2
+  checkpoint hard-crashed with a shape mismatch. Fixed by reading the config via a raw
+  `torch.load(...)['config']` first (no model needed for that step), then building the
+  correctly-shaped model once. A subprocess-level smoke test
+  (`tests/test_generate_script_smoke.py`) now runs the real script against a deliberately
+  non-v0.1-shaped checkpoint — closing a gap where no test had ever executed `generate.py`
+  end-to-end before this.
+- **Recurring lesson, restated:** this is the second script-level bug this project has
+  shipped where every unit test passed because nothing actually *ran* the script
+  end-to-end (the first was `train.py`'s `lr_max`/`contextlib` bugs). The standing rule —
+  every script gets a subprocess-level smoke test, not just unit tests of its importable
+  functions — earns its keep again here.
+
+---
+
 ### 2026-07-26 — Correction: KV cache correctness past `block_size` + fused-AdamW dead check
 - **Finding:** the "+65–81%" KV-cache speedup banked on 2026-07-25 was measured on a run
   (`--gen_tokens 200`, `block_size=128`) where 72 of 200 steps executed a code path that

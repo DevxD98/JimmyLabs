@@ -34,17 +34,18 @@ def main():
     seed_everything(args.seed)
     device = 'mps' if torch.backends.mps.is_available() else 'cpu'
 
-    # A checkpoint is self-describing: read the config it was trained with.
-    tmp_model = GPT(GPTConfig(vocab_size=65, n_layer=4, n_head=4, n_embd=128,
-                              block_size=128, dropout=0.0, weight_tying=True))
-    step, val_loss, cfg = load_checkpoint(args.checkpoint, tmp_model)
+    # A checkpoint is self-describing: read its config directly (no model needed for this --
+    # load_checkpoint() always calls model.load_state_dict(strict=True) internally, so it
+    # can only be used AFTER a correctly-shaped model exists, never to "peek" at the shape.
+    raw = torch.load(args.checkpoint, map_location='cpu', weights_only=True)
+    cfg = raw['config']
     config = GPTConfig(
         vocab_size=cfg['vocab_size'], n_layer=cfg['n_layer'], n_head=cfg['n_head'],
         n_embd=cfg['n_embd'], block_size=cfg['block_size'],
         dropout=0.0, weight_tying=cfg.get('weight_tying', True),
     )
     model = GPT(config)
-    load_checkpoint(args.checkpoint, model)  # restore weights into the correctly-shaped model
+    step, val_loss, _ = load_checkpoint(args.checkpoint, model)
     model.to(device).eval()
 
     tokenizer = CharTokenizer.load(args.meta)
