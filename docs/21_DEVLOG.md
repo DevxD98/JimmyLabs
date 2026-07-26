@@ -93,7 +93,7 @@ The Devlog is a chronological record of major project milestones, architectural 
 - **Code shipped:** autograd toy + XOR + MNIST (Phase 0); character tokenizer + data
   loader (Phase 1); the GPT model — `config`, `embedding`, `attention`, `feedforward`,
   `block`, `gpt` (Phase 2); training loop, warmup→cosine LR schedule, checkpointing, and
-  autoregressive generation (Phase 3). **39 tests green**; CI added
+  autoregressive generation (Phase 3). **39 tests green at that milestone**; CI added
   (`.github/workflows/tests.yml`).
 - **Result:** first trained sample in
   [`outputs/trained_shakespeare_sample.txt`](../outputs/trained_shakespeare_sample.txt) —

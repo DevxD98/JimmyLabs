@@ -50,7 +50,7 @@ This document tracks active development tasks, milestone goals, and architecture
 - [x] **Phase 1** — character tokenizer + data loader (`src/jimmylabs/tokenizer/`, `data/`).
 - [x] **Phase 2** — GPT model (`src/jimmylabs/model/{config,embedding,attention,feedforward,block,gpt}.py`); param count == 818,048 (SPEC §5).
 - [x] **Phase 3** — training loop, LR schedule, checkpointing, generation (`src/jimmylabs/training/`, `inference/`; `scripts/{prepare_data,train,generate}.py`).
-- [x] Test suite: **39 tests** (shape · known-answer · gradient · overfit-a-batch · regression); CI in `.github/workflows/tests.yml`.
+- [x] Test suite: **66 tests** (shape · known-answer · gradient · overfit-a-batch · regression); verified with `./.venv/bin/python -m pytest -q`; CI in `.github/workflows/tests.yml`.
 - [x] **v0.1 milestone** — first coherent Shakespeare, val loss 1.54 (`outputs/trained_shakespeare_sample.txt`).
 
 ---
@@ -58,26 +58,27 @@ This document tracks active development tasks, milestone goals, and architecture
 ## Phase 4 — Optimization (DONE ✓)
 
 - [x] **Baseline benchmark** — `benchmarks/001_baseline.md` (train 65K tok/s, gen 103 tok/s, 258 MB, 10.1 MB ckpt).
-- [x] **KV cache** (`OPTIMIZATION_BACKLOG` #2) — `benchmarks/002_kv_cache.md`, gen +65–81% (measured twice, independently). Correctness gated (`test_kv_cache`: cached == naive, bit-identical).
+- [x] **KV cache** (`OPTIMIZATION_BACKLOG` #2) — `benchmarks/002_kv_cache.md`, gen +86% on the corrected within-`block_size` path. Correctness gated (`test_kv_cache`: cached == naive).
 - [x] **Gradient accumulation** (#3) — `benchmarks/003_grad_accum.md`, eff. batch 64 at +67 MB. Gated (`test_grad_accum`: matches a 4× batch).
 - [x] **bf16** mixed-precision experiment (#6) — `research/experiments/001_bf16_mixed_precision.md`. **Rejected**: 15–31% slower on M1 (no native bf16 matmul hardware). Correct, honest negative result.
 - [x] **Attention visualizer** — `scripts/visualize_attention.py`, reuses the stashed `_attn_weights`.
 
-## Phase 5 — Scale & the Primary Corpus (next)
+## Phase 5 — Scale & the Primary Corpus (v0.2 complete)
 
 v0.1 proved the pipeline on Shakespeare (the *sanity* corpus). Per
 [`docs/17_DATASET_GUIDE.md`](17_DATASET_GUIDE.md), TinyStories — not Shakespeare — is the
 **primary** corpus: its simple English is the actual capacity match for a 1–4M-param model,
 and is where genuinely coherent generation is most likely.
 
-- [ ] **TinyStories provenance + prep** — fill `datasets/SOURCES.md` (real URL/license/date), a
-      `prepare_tinystories.py` mirroring `prepare_data.py`.
-- [ ] **v0.2 config** (~2.7M: L6 h6 C192 block256, `configs/model_v0_2.yaml`) — train on
-      TinyStories, generate, compare qualitatively to v0.1's Shakespeare sample.
-- [ ] Remaining cheap backlog items: **#4** kill hot-loop `.item()`/print syncs, **#5** keep
-      data on-device, **#7** memory-map the dataset instead of full `torch.load`, **#8**
-      efficient top-k/top-p sampling (avoid full sort).
-- [ ] Benchmark v0.2 vs v0.1 (`benchmarks/004_v0_2.md`) — params, tok/s, memory headroom on 8 GB.
+- [x] **TinyStories provenance + prep** — `datasets/SOURCES.md`, `scripts/prepare_tinystories.py`.
+- [x] **v0.2 config and milestone** (~2.7M: L6 h6 C192 block256) — trained on TinyStories,
+      generated, and compared qualitatively to v0.1's Shakespeare sample; see
+      [`benchmarks/004_v0_2.md`](../benchmarks/004_v0_2.md).
+- [x] Remaining cheap backlog audit: **#4** and **#5** already satisfied by construction;
+      **#7** memory-mapped dataset applied; **#8** deferred because the current vocabulary
+      is small and profiling does not justify replacing the clear `torch.sort` path.
+- [x] Benchmark v0.2 absolute results recorded in `benchmarks/004_v0_2.md`; it is not a
+      controlled v0.1 speed delta because model and dataset both changed.
 
 ---
 
