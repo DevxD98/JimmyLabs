@@ -152,6 +152,23 @@ def test_seed_flag_actually_controls_sampling(tiny_checkpoint, tmp_path):
     load_checkpoint restores the RNG state stored in the checkpoint, so seeding before the
     load silently discarded --seed: every run replayed the trainer's RNG state and two
     different --seed values produced byte-identical text.
+
+    DEVICE CAVEAT — this gate is only non-vacuous on CPU. Verified during review by
+    reverting the seed ordering and re-running:
+
+        forced CPU  -> FAILS (the bug reproduces, the gate catches it)
+        MPS (M1)    -> PASSES (the bug does not manifest at all)
+
+    The reason is that `load_checkpoint` calls `torch.set_rng_state`, which restores the
+    **CPU** generator only. On MPS the sampling draws from the MPS generator, which
+    `seed_everything` seeds via `torch.mps.manual_seed` and which the checkpoint restore
+    never touches -- so on the project's own target hardware `--seed` happened to work by
+    accident, and a regression of this bug would pass locally and only fail in CI (Linux,
+    CPU). Do not "simplify" this test by trusting a local green run on the Mac.
+
+    That asymmetry is itself a latent bug in checkpointing rather than in this script:
+    saving/restoring only the CPU RNG means an MPS training run is not bit-reproducible
+    across a resume. Tracked separately in OPTIMIZATION_BACKLOG #17.
     """
     ckpt, meta = tiny_checkpoint
     a, b = tmp_path / "a.txt", tmp_path / "b.txt"

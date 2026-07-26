@@ -40,6 +40,25 @@
 | 14 | **MLX port** as alt runtime | ★★★☆☆ | ★★★★☆ | **Low (research)** | experiment-open | [tiny_gpt_landscape](tiny_gpt_landscape.md) |
 | 15 | **`torch.compile`** on MPS (if/when it helps) | ★★☆☆☆ | ★★☆☆☆ | **Low** | experiment-open | [13](../docs/13_OPTIMIZATION_FOR_APPLE_SILICON.md) |
 | 16 | **Rotary/relative positions** (unblocks #2 past `block_size`) | ★★★☆☆ | ★★★★☆ | **Low (v0.2+, needs retrain)** | planned | [07](../docs/07_EMBEDDINGS.md), [ADR-0004](design_decisions/ADR-0004-no-cache-reuse-past-block-size.md), [ADR-0006](design_decisions/ADR-0006-rotary-positions-candidate.md) |
+| 17 | **Save/restore the MPS RNG state in checkpoints** (resume is not bit-reproducible on MPS) | ★★☆☆☆ | ★★☆☆☆ | **Medium (correctness, not speed)** | planned | [11](../docs/11_TRAINING_PIPELINE.md), `tests/test_generate_script_smoke.py` |
+
+## Audit notes (2026-07-26) — #17, found while reviewing the `--seed` fix
+
+`save_checkpoint` stores `torch.get_rng_state()` and `load_checkpoint` restores it, but
+both are **CPU-only**. On MPS the sampling and dropout draws come from the MPS generator,
+which `seed_everything` seeds via `torch.mps.manual_seed` and which the checkpoint never
+captures. Two consequences, in increasing order of importance:
+
+1. A resumed MPS training run does **not** continue the same random stream it saved, so
+   "resume from checkpoint" is not bit-reproducible on this project's own target hardware.
+2. It made the `--seed` bug *invisible on the Mac*: because the restore never touched the
+   MPS generator, `--seed` appeared to work locally while being genuinely broken on CPU.
+   Verified during review by reverting the fix — the regression test fails on forced CPU
+   and passes on MPS. A test that is vacuous on the maintainer's machine and meaningful
+   only in CI is a trap worth knowing about.
+
+Not urgent (nothing currently depends on resume determinism), but it is a *correctness*
+item rather than a performance one, so it is not filed as "Low" alongside the speed work.
 
 ## Audit notes (2026-07-25)
 
