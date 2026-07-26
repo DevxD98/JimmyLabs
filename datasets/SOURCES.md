@@ -41,7 +41,7 @@
 - Prepared artifact: `datasets/shakespeare/train.pt` and `datasets/shakespeare/val.pt`
 - Notes: memorizes quickly — good for the overfit test, not a generalization claim.
 
-### TinyStories — *planned: primary corpus*
+### TinyStories — *v0.2 primary corpus*
 - Source URL: https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStories-train.txt
 - Version / snapshot date: 2026-07-25
 - Downloaded on: 2026-07-25

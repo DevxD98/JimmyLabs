@@ -39,7 +39,7 @@
 | 13 | **Quantized inference** (int8/int4 for deploy) | ★★★☆☆ | ★★★★☆ | **Low (v1.0+)** | planned | [13](../docs/13_OPTIMIZATION_FOR_APPLE_SILICON.md) |
 | 14 | **MLX port** as alt runtime | ★★★☆☆ | ★★★★☆ | **Low (research)** | experiment-open | [tiny_gpt_landscape](tiny_gpt_landscape.md) |
 | 15 | **`torch.compile`** on MPS (if/when it helps) | ★★☆☆☆ | ★★☆☆☆ | **Low** | experiment-open | [13](../docs/13_OPTIMIZATION_FOR_APPLE_SILICON.md) |
-| 16 | **Rotary/relative positions** (unblocks #2 past `block_size`) | ★★★☆☆ | ★★★★☆ | **Low (v0.2+, needs retrain)** | planned | [07](../docs/07_EMBEDDINGS.md), [ADR-0004](design_decisions/ADR-0004-no-cache-reuse-past-block-size.md) |
+| 16 | **Rotary/relative positions** (unblocks #2 past `block_size`) | ★★★☆☆ | ★★★★☆ | **Low (v0.2+, needs retrain)** | planned | [07](../docs/07_EMBEDDINGS.md), [ADR-0004](design_decisions/ADR-0004-no-cache-reuse-past-block-size.md), [ADR-0006](design_decisions/ADR-0006-rotary-positions-candidate.md) |
 
 ## Audit notes (2026-07-25)
 

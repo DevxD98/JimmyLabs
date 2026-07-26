@@ -124,7 +124,7 @@ tensors · autograd · optimizers · MPS (Metal) acceleration
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e . && pip install pytest
 
-pytest -q                                          # 43 tests, ~5–10s — proves it all works
+pytest -q                                          # 66 tests — proves it all works
 
 python scripts/prepare_data.py                     # downloads + tokenizes tiny Shakespeare
 python scripts/train.py --config configs/train_shakespeare.yaml   # ~3 min, val loss 4.17 → ~1.5

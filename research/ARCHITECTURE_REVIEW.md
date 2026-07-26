@@ -171,7 +171,7 @@ these fixes land in docs:
 - [x] **R2** — make weight tying the v0.1 default; update roadmap framing.
 - [ ] **R3** — commit to the "every folder earns its keep by v0.1" checklist in `20_TODO`.
 - [ ] **R5** — write the evaluation contract into `SPEC.md`.
-- [x] Add ADRs for **pre-norm** and **weight-tying-by-default** (currently only ADR-0001 exists).
+- [x] Add ADRs for **pre-norm** and **weight-tying-by-default** (ADRs 0002 and 0003).
 - [ ] Add the **attention visualizer** and **generation-before-training baseline** to the
       Phase plan.
 

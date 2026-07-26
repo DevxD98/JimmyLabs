@@ -82,7 +82,7 @@ First coherent text generation.
 
 ---
 
-## Phase 4 — Optimization (Weeks 11–14)
+## Phase 4 — Optimization (Weeks 11–14) — complete
 
 Profile before optimizing.
 
@@ -105,7 +105,13 @@ Fast Apple Silicon inference.
 
 ---
 
-## Phase 5 — Research
+## Phase 5 — Scale & Research — current
+
+Completed:
+- v0.2 TinyStories run: 2.745M parameters, best validation loss 0.8607, perplexity ≈2.37.
+- Memory-mapped dataset path and corrected KV-cache boundary behavior.
+
+Next — v0.3 scaling, and the reading below:
 
 Read:
 - Attention Is All You Need
