@@ -14,6 +14,61 @@ The Devlog is a chronological record of major project milestones, architectural 
 
 ## Chronological Entries
 
+### 2026-07-26 — Work-order review round: MODEL_CARD real numbers + a fourth rule-1 bug
+- **Merged Codex's documentation work order** (`7a3afb7`): `MODEL_CARD.md`'s
+  `(to be measured)` placeholders replaced with figures traced individually back to their
+  source records — v0.1's val loss 1.54 / 65,027 train tok/s / 103 gen tok/s / 257.6 MB
+  ([`benchmarks/001`](../benchmarks/001_baseline.md)) and v0.2's 0.8607 / ppl ≈2.37 at step
+  2800/3375 / 21,000 train tok/s / 28 gen tok/s / 1,599.0 MB
+  ([`benchmarks/004`](../benchmarks/004_v0_2.md)). v0.3/v1.0 are marked **unrun** rather
+  than projected, and the two rows carry an explicit note that they are separate absolute
+  measurements, not a controlled v0.1→v0.2 speed delta (model *and* corpus both changed).
+  Stale test counts (39/43 → 66) de-staled repo-wide, with the v0.1 entry's "39 tests green"
+  marked *historical* rather than silently rewritten. Added
+  [`ADR-0006`](../research/design_decisions/ADR-0006-rotary-positions-candidate.md) —
+  rotary/relative positions as a **proposed** candidate for unblocking KV-cache reuse past
+  `block_size` (backlog #16); design only, no model code touched.
+  Two defects were caught in review and fixed by the reviewer, not the author: the ADR index
+  listed `ADR-0005` as `proposed` while the ADR itself says `accepted` — *a consistency bug
+  inside the consistency audit's own deliverable* — and a dangling empty `Next:` heading in
+  [`docs/01_ROADMAP.md`](01_ROADMAP.md).
+- **A fourth catch-and-substitute bug, and the first found by an intern's audit rather than
+  by a crash:** `scripts/generate_baseline.py` printed a warning and carried on with a
+  **synthetic 65-character vocabulary** when `datasets/shakespeare/meta.json` was missing,
+  then wrote `outputs/untrained_baseline.txt` anyway — decoded against a character mapping
+  unrelated to the corpus the trained model is compared against. Plausible-looking, and
+  worthless as a baseline, with nothing to signal it. Reported by the Claude Code Web intern
+  during its script-coverage audit and **verified independently before being acted on**.
+  Fixed to fail loudly, naming `prepare_data.py` as the remedy.
+- **The same lines carried an adjacent rule-5 violation:** `vocab_size=65` was hardcoded
+  while a tokenizer that knows its own `vocab_size` was already in hand. Now read from the
+  tokenizer, which is loaded *first* precisely so it can be — the same bug class that
+  crashed `generate.py` on the first v0.2 checkpoint.
+- **Gate proven non-vacuous:** `tests/test_generate_baseline_script_smoke.py` runs the real
+  script via subprocess with two gates (missing metadata → non-zero exit, actionable
+  message, and *no artifact written*; a deliberately non-65 vocabulary → every output
+  character drawn from the supplied vocab). Both were checked out against the pre-fix
+  script and **both fail** — the second with `KeyError: 9` as the model emits ids beyond the
+  tokenizer's range, demonstrating the hardcoded `vocab_size` concretely. This follows the
+  2026-07-26 KV-cache lesson: a gate is only worth what its failure mode proves. **68 tests
+  passing** (was 66).
+- **Also confirmed:** `tests/test_mnist_smoke.py` is misleadingly named — it imports
+  `MNISTMLP`/`get_device` and never executes `train_mnist.py`. It remains a useful
+  overfit-a-batch test but is **not** script coverage, and `train_mnist.py` is therefore
+  still the one uncovered script (no CLI args, hardcoded 5 epochs, unconditional download —
+  making it testable is a code change, not a test change).
+- **Rule 7, refined by a case that cut both ways:** the Claude Code Web intern reported that
+  the KV-cache fix `1b86ca6` was *not* on `main` and sat on an unmerged branch. That was
+  **factually correct about its own remote and wrong about the world** — in its sandbox
+  `origin` is its *own fork*, whose `main` is stale at `d05941f`, while real upstream `main`
+  contains the fix via merge `cc8ff74`. The lesson is sharper than "verify the report":
+  verify *which remote the report is about*. Its rebase onto the already-merged fix branch
+  left it missing all of the v0.2 milestone, so it independently re-fixed the `generate.py`
+  shape bug and re-created a smoke test that already existed — duplicate work caused purely
+  by a stale base.
+
+---
+
 ### 2026-07-26 — v0.2 milestone: first TinyStories training run 🎉
 - **Milestone:** the first ~2.7M-param model (L=6, h=6, C=192, block=256, vocab=138)
   trained to completion on TinyStories, the project's *primary* corpus. Validation loss
