@@ -196,6 +196,8 @@ Apple Silicon is a **first-class target**, not an afterthought → **[docs/13_OP
 
 We welcome contributions, provided they align strictly with the project's educational focus and constitution. Before writing any code, please read our [Engineering Principles](ENGINEERING_PRINCIPLES.md) and review the [Contributing Guide](CONTRIBUTING.md) for our ADR, experiment, and documentation workflows.
 
+**Working with an AI agent?** Point it at [`AGENTS.md`](AGENTS.md) first. It carries the ten standing rules with the real incident behind each, what counts as a verified claim here, and the environment traps (editable-install/worktree, MPS-vs-CPU RNG) that have actually cost this project time.
+
 ## 📡 Status
 
 ```

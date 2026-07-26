@@ -4,6 +4,11 @@ Welcome to the lab. JimmyLabs is an educational, documentation-first project. To
 
 Before you write any code, read the **[`ENGINEERING_PRINCIPLES.md`](ENGINEERING_PRINCIPLES.md)**. If a PR violates these principles, the principles win.
 
+> **If you are an AI agent** — or you are directing one — read **[`AGENTS.md`](AGENTS.md)**
+> instead of this file. This guide covers the human-facing doc/ADR/experiment/benchmark
+> process; `AGENTS.md` covers the standing rules, the verification bar, and the environment
+> traps that agents specifically get wrong.
+
 ---
 
 ## 1. The 12-Section Doc Template & Cross-References
