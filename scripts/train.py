@@ -13,12 +13,37 @@ from jimmylabs.training.schedule import get_lr, clip_gradients
 from jimmylabs.training.checkpoint import save_checkpoint
 from jimmylabs.utils.seed import seed_everything
 # Assuming we have the dataset loader from Phase 1
-from jimmylabs.data.loader import get_batch 
+from jimmylabs.data.loader import get_batch, get_batch_mmap, open_memmap, save_memmap
+
+
+def ensure_memmap(pt_path: Path, bin_path: Path) -> Path:
+    """Convert a prepared *.pt token tensor to the flat binary the memmap loader reads.
+
+    Cached: the conversion is skipped when `bin_path` already exists and is newer than
+    `pt_path`. The mtime check (rather than mere existence) is what stops a stale binary
+    from silently outliving the dataset it was built from — re-running a prepare script
+    must invalidate it, or training would quietly continue against the previous corpus.
+
+    Returns the path to the binary.
+    """
+    if bin_path.exists() and bin_path.stat().st_mtime >= pt_path.stat().st_mtime:
+        print(f"  reusing cached memmap {bin_path}")
+        return bin_path
+
+    why = "stale" if bin_path.exists() else "missing"
+    print(f"  {why} memmap -> converting {pt_path} to {bin_path} (one-time)")
+    save_memmap(torch.load(pt_path, weights_only=True), bin_path)
+    return bin_path
+
 
 def main():
     parser = argparse.ArgumentParser(description="Train JimmyLabs GPT")
     parser.add_argument('--config', type=str, default='configs/train_shakespeare.yaml', help='Path to training config')
     parser.add_argument('--data_dir', type=str, default='datasets/shakespeare', help='Directory holding train.pt/val.pt')
+    parser.add_argument('--use_mmap', action='store_true',
+                        help='Read the corpus via a memory-mapped binary instead of loading '
+                             'it fully into RAM (OPTIMIZATION_BACKLOG #7, benchmarks/006). '
+                             'Default off; identical batches either way.')
     args = parser.parse_args()
 
     # Load configuration
@@ -77,8 +102,20 @@ def main():
         raise FileNotFoundError(
             f"Dataset not found in {data_dir}. Run `python scripts/prepare_data.py` first."
         )
-    train_data = torch.load(train_path, weights_only=True)
-    val_data = torch.load(val_path, weights_only=True)
+    # Two ways to hold the corpus, one sampling contract. get_batch and get_batch_mmap
+    # take the same arguments and, for the same RNG state, return bit-identical batches
+    # (tests/test_loader_mmap.py) — so the choice below is purely about memory, never
+    # about what the model sees.
+    if args.use_mmap:
+        print("Dataset: memory-mapped (--use_mmap)")
+        train_data = open_memmap(ensure_memmap(train_path, data_dir / 'train.bin'))
+        val_data = open_memmap(ensure_memmap(val_path, data_dir / 'val.bin'))
+        get_batch_fn = get_batch_mmap
+    else:
+        print("Dataset: in-memory")
+        train_data = torch.load(train_path, weights_only=True)
+        val_data = torch.load(val_path, weights_only=True)
+        get_batch_fn = get_batch
 
     # Setup checkpoints dir
     os.makedirs('checkpoints', exist_ok=True)
@@ -104,7 +141,7 @@ def main():
             
         # 2. Forward, Backward & Accumulate over grad_accum_steps
         for micro_step in range(grad_accum_steps):
-            X, Y = get_batch(train_data, block_size, batch_size, device)
+            X, Y = get_batch_fn(train_data, block_size, batch_size, device)
                 
             with ctx:
                 logits, loss = model(X, Y)
@@ -125,7 +162,7 @@ def main():
         if step % eval_interval == 0 or step == max_steps:
             model.eval()
             with torch.no_grad():
-                X_val, Y_val = get_batch(val_data, block_size, batch_size, device)
+                X_val, Y_val = get_batch_fn(val_data, block_size, batch_size, device)
                     
                 _, val_loss_tensor = model(X_val, Y_val)
                 val_loss = val_loss_tensor.item()
